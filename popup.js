@@ -248,7 +248,7 @@ async function processWithLLM(text) {
         messages: [
           {
             role: "user",
-            content: `Extract the promise from this text and summarize it as a bullet point: "${text}"`
+            content: `Extract the promise from this text and summarize it in one line as a to-do item: "${text}"`
           }
         ]
       })
