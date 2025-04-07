@@ -1,16 +1,27 @@
 document.addEventListener('DOMContentLoaded', function() {
     loadPromises();
     
-    // Add new promise button
+    // Check if API key exists and manage display
+    checkApiKeyStatus();
+    
+    // API key input
     document.getElementById('save-api-key').addEventListener('click', function() {
         const apiKey = document.getElementById('api-key').value.trim();
         if (apiKey) {
           chrome.storage.local.set({ "openaiApiKey": apiKey }, function() {
             alert("API key saved successfully!");
+            checkApiKeyStatus(); // Update UI after saving
           });
         }
-      });
+    });
     
+    // Show API key form when edit button is clicked
+    document.getElementById('edit-api-key').addEventListener('click', function() {
+        document.getElementById('api-key-saved').classList.add('hidden');
+        document.getElementById('api-key-form').classList.remove('hidden');
+    });
+    
+    // Add new promise button
     document.getElementById('add-promise').addEventListener('click', function() {
       const modal = document.getElementById('add-modal');
       modal.style.display = 'block';
@@ -38,138 +49,192 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('promise-text').value = '';
       }
     });
-  });
-  
-  // Load promises from storage
-  function loadPromises() {
-    chrome.storage.local.get("promises", (data) => {
-      const promiseList = document.getElementById('promise-list');
-      const noPromisesEl = document.getElementById('no-promises');
-      
-      // Clear current list
-      while (promiseList.firstChild && promiseList.firstChild !== noPromisesEl) {
-        promiseList.removeChild(promiseList.firstChild);
-      }
-      
-      const promises = data.promises || [];
-      
-      if (promises.length === 0) {
-        noPromisesEl.classList.remove('hidden');
-      } else {
-        noPromisesEl.classList.add('hidden');
+});
+
+// Check API key status and update UI
+function checkApiKeyStatus() {
+    chrome.storage.local.get("openaiApiKey", (data) => {
+        const apiKeyForm = document.getElementById('api-key-form');
+        const apiKeySaved = document.getElementById('api-key-saved');
         
-        // Sort by deadline, closest first
-        promises.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-        
-        promises.forEach(promise => {
-          const promiseItem = document.createElement('div');
-          promiseItem.className = 'promise-item';
-          promiseItem.dataset.id = promise.id;
-          
-          // Format dates
-          const createdDate = new Date(promise.createdAt);
-          const deadlineDate = new Date(promise.deadline);
-          const formattedCreated = createdDate.toLocaleDateString();
-          const formattedDeadline = deadlineDate.toLocaleDateString();
-          
-          // Check if past deadline
-          const isPastDeadline = new Date() > deadlineDate && !promise.completed;
-          
-          promiseItem.innerHTML = `
-            <div class="promise-text" style="${promise.completed ? 'text-decoration: line-through;' : ''}${isPastDeadline ? 'color: red;' : ''}">
-              ${promise.processedText || promise.text}
-            </div>
-            <div class="promise-meta">
-              <span>Created: ${formattedCreated}</span>
-              <span style="${isPastDeadline ? 'color: red; font-weight: bold;' : ''}">
-                Deadline: ${formattedDeadline}
-              </span>
-            </div>
-            <div class="checkbox-container">
-              <input type="checkbox" class="complete-checkbox" ${promise.completed ? 'checked' : ''}>
-              <label>Completed</label>
-            </div>
-            <div class="promise-actions">
-              <button class="delete-btn" style="background: none; border: none; color: #666; cursor: pointer;">Delete</button>
-            </div>
-          `;
-          
-          promiseList.insertBefore(promiseItem, noPromisesEl);
-          
-          // Add event listeners for this promise item
-          const checkbox = promiseItem.querySelector('.complete-checkbox');
-          checkbox.addEventListener('change', function() {
-            togglePromiseComplete(promise.id, this.checked);
-          });
-          
-          const deleteBtn = promiseItem.querySelector('.delete-btn');
-          deleteBtn.addEventListener('click', function() {
-            deletePromise(promise.id);
-          });
-        });
-      }
-    });
-  }
-  
-  // Toggle promise completion status
-  function togglePromiseComplete(id, isComplete) {
-    chrome.storage.local.get("promises", (data) => {
-      const promises = data.promises || [];
-      const updatedPromises = promises.map(promise => {
-        if (promise.id === id) {
-          return { ...promise, completed: isComplete };
+        if (data.openaiApiKey) {
+            // Key exists, show "API Key saved" message
+            apiKeyForm.classList.add('hidden');
+            apiKeySaved.classList.remove('hidden');
+        } else {
+            // No key, show the form
+            apiKeyForm.classList.remove('hidden');
+            apiKeySaved.classList.add('hidden');
         }
-        return promise;
-      });
-      
-      chrome.storage.local.set({ promises: updatedPromises }, () => {
-        loadPromises();
-      });
     });
-  }
+}
   
-  // Delete a promise
-  function deletePromise(id) {
-    chrome.storage.local.get("promises", (data) => {
-      const promises = data.promises || [];
-      const updatedPromises = promises.filter(promise => promise.id !== id);
-      
-      chrome.storage.local.set({ promises: updatedPromises }, () => {
-        loadPromises();
-      });
-    });
-  }
-  
-  // Save manually added promise
-  function saveManualPromise(text, deadline) {
-    const now = new Date();
-    const promise = {
-      text: text,
-      processedText: "",  // Will be filled after Claude processing
-      createdAt: now.toISOString(),
-      deadline: deadline,
-      completed: false,
-      id: Date.now().toString()
-    };
+// Load promises from storage
+function loadPromises() {
+  chrome.storage.local.get("promises", (data) => {
+    const promiseList = document.getElementById('promise-list');
+    const noPromisesEl = document.getElementById('no-promises');
     
-    // Process with Claude (placeholder)
-    processWithClaude(text).then(result => {
-      promise.processedText = result;
+    // Clear current list
+    while (promiseList.firstChild && promiseList.firstChild !== noPromisesEl) {
+      promiseList.removeChild(promiseList.firstChild);
+    }
+    
+    const promises = data.promises || [];
+    
+    if (promises.length === 0) {
+      noPromisesEl.classList.remove('hidden');
+    } else {
+      noPromisesEl.classList.add('hidden');
       
-      // Save to storage
-      chrome.storage.local.get("promises", (data) => {
-        const promises = data.promises || [];
-        promises.push(promise);
-        chrome.storage.local.set({ promises: promises }, () => {
-          loadPromises();
+      // Sort by deadline, closest first
+      promises.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      
+      promises.forEach(promise => {
+        const promiseItem = document.createElement('div');
+        promiseItem.className = 'promise-item';
+        promiseItem.dataset.id = promise.id;
+        
+        // Format dates
+        const createdDate = new Date(promise.createdAt);
+        const deadlineDate = new Date(promise.deadline);
+        const formattedCreated = createdDate.toLocaleDateString();
+        const formattedDeadline = deadlineDate.toLocaleDateString();
+        
+        // Check if past deadline
+        const isPastDeadline = new Date() > deadlineDate && !promise.completed;
+        
+        promiseItem.innerHTML = `
+          <div class="promise-text" style="${promise.completed ? 'text-decoration: line-through;' : ''}${isPastDeadline ? 'color: red;' : ''}">
+            ${promise.processedText || promise.text}
+          </div>
+          <div class="promise-meta">
+            <span>Created: ${formattedCreated}</span>
+            <span style="${isPastDeadline ? 'color: red; font-weight: bold;' : ''}">
+              Deadline: ${formattedDeadline}
+            </span>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" class="complete-checkbox" ${promise.completed ? 'checked' : ''}>
+            <label>Completed</label>
+          </div>
+          <div class="promise-actions">
+            <button class="delete-btn" style="background: none; border: none; color: #666; cursor: pointer;">Delete</button>
+          </div>
+        `;
+        
+        promiseList.insertBefore(promiseItem, noPromisesEl);
+        
+        // Add event listeners for this promise item
+        const checkbox = promiseItem.querySelector('.complete-checkbox');
+        checkbox.addEventListener('change', function() {
+          togglePromiseComplete(promise.id, this.checked);
+        });
+        
+        const deleteBtn = promiseItem.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', function() {
+          deletePromise(promise.id);
         });
       });
+    }
+  });
+}
+
+// Toggle promise completion status
+function togglePromiseComplete(id, isComplete) {
+  chrome.storage.local.get("promises", (data) => {
+    const promises = data.promises || [];
+    const updatedPromises = promises.map(promise => {
+      if (promise.id === id) {
+        return { ...promise, completed: isComplete };
+      }
+      return promise;
     });
-  }
+    
+    chrome.storage.local.set({ promises: updatedPromises }, () => {
+      loadPromises();
+    });
+  });
+}
+
+// Delete a promise
+function deletePromise(id) {
+  chrome.storage.local.get("promises", (data) => {
+    const promises = data.promises || [];
+    const updatedPromises = promises.filter(promise => promise.id !== id);
+    
+    chrome.storage.local.set({ promises: updatedPromises }, () => {
+      loadPromises();
+    });
+  });
+}
+
+// Save manually added promise
+function saveManualPromise(text, deadline) {
+  const now = new Date();
+  const promise = {
+    text: text,
+    processedText: "",  // Will be filled after processing
+    createdAt: now.toISOString(),
+    deadline: deadline,
+    completed: false,
+    id: Date.now().toString()
+  };
   
-  // Function to process text with Claude API (placeholder)
-  async function processWithClaude(text) {
-    // In a real implementation, you would call the Claude API here
-    // For now, we'll just return a simplified version
-    return `Promise to: ${text.trim()}`;
+  // Process with OpenAI
+  processWithLLM(text).then(result => {
+    promise.processedText = result;
+    
+    // Save to storage
+    chrome.storage.local.get("promises", (data) => {
+      const promises = data.promises || [];
+      promises.push(promise);
+      chrome.storage.local.set({ promises: promises }, () => {
+        loadPromises();
+      });
+    });
+  });
+}
+
+// Function to process text with OpenAI API
+async function processWithLLM(text) {
+  try {
+    // Get the API key from storage
+    const data = await chrome.storage.local.get("openaiApiKey");
+    const apiKey = data.openaiApiKey;
+    
+    if (!apiKey) {
+      return "Please set your OpenAI API key in the extension settings";
+    }
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        max_tokens: 1024,
+        messages: [
+          {
+            role: "user",
+            content: `Extract the promise from this text and summarize it as a bullet point: "${text}"`
+          }
+        ]
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API Error:', errorData);
+      return "Error processing promise. Please check your API key.";
+    }
+    
+    const result = await response.json();
+    return result.choices[0].message.content;
+  } catch (error) {
+    console.error('Error processing with API:', error);
+    return `Promise to: ${text.trim()}`; // Fallback
   }
+}

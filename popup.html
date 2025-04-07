@@ -1,3 +1,4 @@
+<!-- popup.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,7 +7,9 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      width: 350px;
+      width: 400px;
+      height: 600px;
+      overflow-y: auto;
       margin: 0;
       padding: 15px;
     }
@@ -98,21 +101,74 @@
     .hidden {
       display: none;
     }
+    
+    .settings-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+    }
+    
+    .api-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+    
+    .edit-btn {
+      background: none;
+      border: none;
+      color: #4285f4;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 12px;
+    }
+    
+    .input-group {
+      margin-bottom: 10px;
+    }
+    
+    .input-group input {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+    }
   </style>
 </head>
 <body>
+  <div class="settings-section">
+    <h3 style="margin-top: 0;">API Settings</h3>
+    
+    <!-- This div shows when API key exists -->
+    <div id="api-key-saved" class="api-status hidden">
+      <span>✅ OpenAI API key is saved</span>
+      <button id="edit-api-key" class="edit-btn">Edit</button>
+    </div>
+    
+    <!-- This div shows when API key needs to be entered -->
+    <div id="api-key-form">
+      <div class="input-group">
+        <label for="api-key">OpenAI API Key:</label>
+        <input type="password" id="api-key" placeholder="Enter your API key">
+      </div>
+      <div class="button-group">
+        <button id="save-api-key" class="add-btn">Save Key</button>
+      </div>
+    </div>
+  </div>
+  
   <div class="header">
     <h1>Promise Tracker</h1>
     <button id="add-promise" class="add-btn">Add New</button>
-  </div>
-
-  <div class="settings-section">
-    <h3>API Settings</h3>
-    <div>
-      <label for="api-key">OpenAI API Key:</label>
-      <input type="password" id="api-key" placeholder="Enter your API key">
-      <button id="save-api-key">Save Key</button>
-    </div>
   </div>
   
   <div id="promise-list" class="promise-list">
