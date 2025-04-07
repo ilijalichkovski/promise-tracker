@@ -142,11 +142,45 @@
       display: flex;
       justify-content: flex-end;
     }
+    
+    .settings-button {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      padding: 5px;
+      font-size: 14px;
+    }
+
+    .settings-button:hover {
+      color: #333;
+    }
+
+    .refresh-button {
+      background: none;
+      border: none;
+      color: #4285f4;
+      cursor: pointer;
+      padding: 5px;
+      font-size: 16px;
+    }
+
+    .refresh-button:hover {
+      color: #2b5797;
+    }
+
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
-  <div class="settings-section">
-    <h3 style="margin-top: 0;">API Settings</h3>
+  <!-- Settings Section (Initially Hidden) -->
+  <div id="settings-section" class="settings-section hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin-top: 0;">API Settings</h3>
+      <button id="close-settings" class="settings-button">✕</button>
+    </div>
     
     <!-- This div shows when API key exists -->
     <div id="api-key-saved" class="api-status hidden">
@@ -167,8 +201,14 @@
   </div>
   
   <div class="header">
-    <h1>Promise Tracker</h1>
-    <button id="add-promise" class="add-btn">Add New</button>
+    <div style="display: flex; align-items: center;">
+      <h1 style="margin-right: 10px;">Promise Tracker</h1>
+      <button id="refresh-list" class="refresh-button" title="Refresh List">🔄</button>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button id="show-settings" class="settings-button" title="Settings">⚙️</button>
+      <button id="add-promise" class="add-btn">Add New</button>
+    </div>
   </div>
   
   <div id="promise-list" class="promise-list">

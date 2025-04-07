@@ -31,21 +31,38 @@ chrome.runtime.onInstalled.addListener(() => {
         id: Date.now().toString()
       };
       
-      // Process with Claude (placeholder for actual API integration)
-      processWithLLM(promise.text).then(result => {
-        promise.processedText = result;
-        
-        // Save to storage
-        chrome.storage.local.get("promises", (data) => {
-          const promises = data.promises || [];
-          promises.push(promise);
-          chrome.storage.local.set({ promises: promises }, () => {
-            console.log("Promise saved");
+      // Check if API key exists first
+      chrome.storage.local.get("openaiApiKey", (data) => {
+        if (!data.openaiApiKey) {
+          // No API key - save raw text
+          promise.processedText = `Promise to: ${promise.text}`;
+          chrome.storage.local.get("promises", (data) => {
+            const promises = data.promises || [];
+            promises.push(promise);
+            chrome.storage.local.set({ promises: promises }, () => {
+              console.log("Promise saved without processing");
+              sendResponse({status: "Promise saved without processing"});
+            });
           });
-        });
+        } else {
+          // Process with Claude if API key exists
+          processWithLLM(promise.text).then(result => {
+            promise.processedText = result;
+            
+            // Save to storage
+            chrome.storage.local.get("promises", (data) => {
+              const promises = data.promises || [];
+              promises.push(promise);
+              chrome.storage.local.set({ promises: promises }, () => {
+                console.log("Promise saved with processing");
+                sendResponse({status: "Promise saved with processing"});
+              });
+            });
+          });
+        }
       });
       
-      sendResponse({status: "Processing promise"});
+      return true; // Keep the message channel open for async response
     }
     return true;
   });

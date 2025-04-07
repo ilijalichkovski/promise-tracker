@@ -1,17 +1,51 @@
 document.addEventListener('DOMContentLoaded', function() {
     loadPromises();
     
-    // Check if API key exists and manage display
-    checkApiKeyStatus();
+    // Check if first time use
+    chrome.storage.local.get(['firstUse', 'openaiApiKey'], function(data) {
+        const settingsSection = document.getElementById('settings-section');
+        if (data.firstUse === undefined) {
+            // First time use - show settings
+            settingsSection.classList.remove('hidden');
+            chrome.storage.local.set({ firstUse: false });
+        } else {
+            // Not first time - hide settings
+            settingsSection.classList.add('hidden');
+        }
+        
+        // Still update API key status
+        updateApiKeyStatus(data.openaiApiKey);
+    });
+    
+    // Settings button
+    document.getElementById('show-settings').addEventListener('click', function() {
+        document.getElementById('settings-section').classList.remove('hidden');
+    });
+    
+    // Close settings button
+    document.getElementById('close-settings').addEventListener('click', function() {
+        document.getElementById('settings-section').classList.add('hidden');
+    });
+    
+    // Refresh button
+    document.getElementById('refresh-list').addEventListener('click', function() {
+        this.style.transform = 'rotate(360deg)';
+        this.style.transition = 'transform 0.5s';
+        loadPromises();
+        setTimeout(() => {
+            this.style.transform = '';
+            this.style.transition = '';
+        }, 500);
+    });
     
     // API key input
     document.getElementById('save-api-key').addEventListener('click', function() {
         const apiKey = document.getElementById('api-key').value.trim();
         if (apiKey) {
-          chrome.storage.local.set({ "openaiApiKey": apiKey }, function() {
-            alert("API key saved successfully!");
-            checkApiKeyStatus(); // Update UI after saving
-          });
+            chrome.storage.local.set({ "openaiApiKey": apiKey }, function() {
+                alert("API key saved successfully!");
+                updateApiKeyStatus(apiKey);
+            });
         }
     });
     
@@ -23,52 +57,47 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add new promise button
     document.getElementById('add-promise').addEventListener('click', function() {
-      const modal = document.getElementById('add-modal');
-      modal.style.display = 'block';
-      
-      // Set default date to a week from now
-      const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + 7);
-      document.getElementById('deadline').valueAsDate = defaultDate;
+        const modal = document.getElementById('add-modal');
+        modal.style.display = 'block';
+        
+        // Set default date to a week from now
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 7);
+        document.getElementById('deadline').valueAsDate = defaultDate;
     });
     
     // Cancel button in modal
     document.getElementById('cancel-modal').addEventListener('click', function() {
-      document.getElementById('add-modal').style.display = 'none';
+        document.getElementById('add-modal').style.display = 'none';
     });
     
     // Save button in modal
     document.getElementById('save-modal').addEventListener('click', function() {
-      const promiseText = document.getElementById('promise-text').value.trim();
-      const deadline = document.getElementById('deadline').value;
-      
-      if (promiseText) {
-        // Process with Claude and save
-        saveManualPromise(promiseText, deadline);
-        document.getElementById('add-modal').style.display = 'none';
-        document.getElementById('promise-text').value = '';
-      }
+        const promiseText = document.getElementById('promise-text').value.trim();
+        const deadline = document.getElementById('deadline').value;
+        
+        if (promiseText) {
+            saveManualPromise(promiseText, deadline);
+            document.getElementById('add-modal').style.display = 'none';
+            document.getElementById('promise-text').value = '';
+        }
     });
 });
 
-// Check API key status and update UI
-function checkApiKeyStatus() {
-    chrome.storage.local.get("openaiApiKey", (data) => {
-        const apiKeyForm = document.getElementById('api-key-form');
-        const apiKeySaved = document.getElementById('api-key-saved');
-        
-        if (data.openaiApiKey) {
-            // Key exists, show "API Key saved" message
-            apiKeyForm.classList.add('hidden');
-            apiKeySaved.classList.remove('hidden');
-        } else {
-            // No key, show the form
-            apiKeyForm.classList.remove('hidden');
-            apiKeySaved.classList.add('hidden');
-        }
-    });
+// Update API key status in UI
+function updateApiKeyStatus(apiKey) {
+    const apiKeyForm = document.getElementById('api-key-form');
+    const apiKeySaved = document.getElementById('api-key-saved');
+    
+    if (apiKey) {
+        apiKeyForm.classList.add('hidden');
+        apiKeySaved.classList.remove('hidden');
+    } else {
+        apiKeyForm.classList.remove('hidden');
+        apiKeySaved.classList.add('hidden');
+    }
 }
-  
+
 // Load promises from storage
 function loadPromises() {
   chrome.storage.local.get("promises", (data) => {
