@@ -82,6 +82,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
+        // Disable the save button to prevent multiple clicks
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
         chrome.runtime.sendMessage({
           action: "savePromise",
           text: message.text,
@@ -90,6 +95,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           if (chrome.runtime.lastError) {
             console.error('Error saving promise:', chrome.runtime.lastError);
             alert('Failed to save promise. Please try again.');
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Promise';
           } else {
             console.log('Promise saved successfully:', response);
             closeDialog();

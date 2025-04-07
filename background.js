@@ -36,28 +36,17 @@ chrome.runtime.onInstalled.addListener(() => {
         if (!data.openaiApiKey) {
           // No API key - save raw text
           promise.processedText = `Promise to: ${promise.text}`;
-          chrome.storage.local.get("promises", (data) => {
-            const promises = data.promises || [];
-            promises.push(promise);
-            chrome.storage.local.set({ promises: promises }, () => {
-              console.log("Promise saved without processing");
-              sendResponse({status: "Promise saved without processing"});
-            });
-          });
+          savePromiseToStorage(promise, sendResponse, "without processing");
         } else {
           // Process with Claude if API key exists
           processWithLLM(promise.text).then(result => {
             promise.processedText = result;
-            
-            // Save to storage
-            chrome.storage.local.get("promises", (data) => {
-              const promises = data.promises || [];
-              promises.push(promise);
-              chrome.storage.local.set({ promises: promises }, () => {
-                console.log("Promise saved with processing");
-                sendResponse({status: "Promise saved with processing"});
-              });
-            });
+            savePromiseToStorage(promise, sendResponse, "with processing");
+          }).catch(error => {
+            console.error("Error processing with LLM:", error);
+            // Fallback to raw text if processing fails
+            promise.processedText = `Promise to: ${promise.text}`;
+            savePromiseToStorage(promise, sendResponse, "with fallback");
           });
         }
       });
@@ -66,6 +55,18 @@ chrome.runtime.onInstalled.addListener(() => {
     }
     return true;
   });
+  
+  // Helper function to save promise to storage
+  function savePromiseToStorage(promise, sendResponse, status) {
+    chrome.storage.local.get("promises", (data) => {
+      const promises = data.promises || [];
+      promises.push(promise);
+      chrome.storage.local.set({ promises: promises }, () => {
+        console.log(`Promise saved ${status}`);
+        sendResponse({status: `Promise saved ${status}`});
+      });
+    });
+  }
   
   async function processWithLLM(text) {
     // Get the API key from storage
@@ -83,7 +84,7 @@ chrome.runtime.onInstalled.addListener(() => {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4",
         max_tokens: 1024,
         messages: [
           {
