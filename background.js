@@ -6,15 +6,25 @@ chrome.runtime.onInstalled.addListener(() => {
     });
   });
   
-  chrome.contextMenus.onClicked.addListener((info, tab) => {
+  chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === "savePromise") {
       const selectedText = info.selectionText;
       
-      // Send message to content script to show deadline input dialog
-      chrome.tabs.sendMessage(tab.id, {
-        action: "showDeadlineDialog",
-        text: selectedText
-      });
+      try {
+        // Ensure content script is injected
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content.js']
+        });
+        
+        // Send message to content script to show deadline input dialog
+        chrome.tabs.sendMessage(tab.id, {
+          action: "showDeadlineDialog",
+          text: selectedText
+        });
+      } catch (error) {
+        console.error('Error injecting content script:', error);
+      }
     }
   });
   
