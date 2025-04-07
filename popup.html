@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Promise Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 350px;
+      margin: 0;
+      padding: 15px;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .add-btn {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .promise-list {
+      max-height: 350px;
+      overflow-y: auto;
+    }
+    
+    .promise-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .promise-text {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    .promise-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .promise-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 5px;
+    }
+    
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      margin-top: 5px;
+    }
+    
+    .checkbox-container input {
+      margin-right: 5px;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 20px;
+      width: 80%;
+      border-radius: 5px;
+    }
+    
+    .no-promises {
+      text-align: center;
+      color: #666;
+      margin-top: 20px;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Promise Tracker</h1>
+    <button id="add-promise" class="add-btn">Add New</button>
+  </div>
+
+  <div class="settings-section">
+    <h3>API Settings</h3>
+    <div>
+      <label for="api-key">OpenAI API Key:</label>
+      <input type="password" id="api-key" placeholder="Enter your API key">
+      <button id="save-api-key">Save Key</button>
+    </div>
+  </div>
+  
+  <div id="promise-list" class="promise-list">
+    <!-- Promises will be loaded here -->
+    <div id="no-promises" class="no-promises">No promises yet. Add one or save from web pages.</div>
+  </div>
+  
+  <!-- Modal for adding new promise -->
+  <div id="add-modal" class="modal">
+    <div class="modal-content">
+      <h3>Add New Promise</h3>
+      <div>
+        <label for="promise-text">Promise:</label>
+        <textarea id="promise-text" style="width: 100%; height: 80px; margin: 10px 0; padding: 5px;"></textarea>
+      </div>
+      <div>
+        <label for="deadline">Deadline:</label>
+        <input type="date" id="deadline" style="width: 100%; padding: 5px; margin: 10px 0;">
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <button id="cancel-modal" style="margin-right: 10px; padding: 5px 10px;">Cancel</button>
+        <button id="save-modal" style="background-color: #4285f4; color: white; border: none; padding: 5px 10px;">Save</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
