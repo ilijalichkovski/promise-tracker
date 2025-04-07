@@ -3,6 +3,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "showDeadlineDialog") {
       // Prevent multiple dialogs
       if (document.getElementById('promise-dialog')) {
+        sendResponse({status: "Dialog already exists"});
         return true;
       }
 
@@ -90,11 +91,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.error('Error saving promise:', chrome.runtime.lastError);
             alert('Failed to save promise. Please try again.');
           } else {
-            console.log(response);
+            console.log('Promise saved successfully:', response);
             closeDialog();
           }
         });
       });
+
+      // Send response to indicate dialog was created
+      sendResponse({status: "Dialog created"});
     }
     return true;
   });
