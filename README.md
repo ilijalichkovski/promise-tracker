@@ -1,11 +1,10 @@
 # Promise Tracker Chrome Extension
 
-A Chrome extension that helps you track promises made in text conversations and web content. Never forget a commitment again!
+A quick Chrome extension I made myself to track promises made in text conversations on Slack/WhatsApp/Messenger. Dead simple, no bells and whistles. It is for my personal use only, but since I thought it may benefit others, I am posting it here.
 
 ## Features
 
-- Track promises made in any text on the web and add manual promises
-- Categorize promises by type (personal, work, social, etc.)
+- Track promises made in any text on the web, or manually add promises
 - Set due dates and reminders
 - Mark promises as completed or broken
 
